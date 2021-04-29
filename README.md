@@ -27,7 +27,7 @@ container must be named `db`.
 ## Example usage
 
 ```yaml
-uses: aexeagmbh/gh-actions-docker-compose-up
+uses: aexeagmbh/gh-actions-docker-compose-up@main
 with:
   docker-hub-username: foo
   docker-hub-access-token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
