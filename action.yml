@@ -27,25 +27,29 @@ runs:
       shell: bash
     - name: Login to Docker Hub
       run: |
+        echo "::group::Login to Docker Hub"
         if [ "${{ inputs.docker-hub-username }}" != "" ]; then
-          echo "::group::Login to Docker Hub"
           echo "${DOCKER_HUB_ACCESS_TOKEN}" | \
               docker login --username "${{ inputs.docker-hub-username }}" \
               --password-stdin
-          echo "::endgroup::"
+        else
+          echo "skipped"
         fi
+        echo "::endgroup::"
       env:
         DOCKER_HUB_ACCESS_TOKEN: ${{ inputs.docker-hub-access-token }}
       shell: bash
     - name: Start service containers
       run: |
+        # Start the service containers before building custom container images.
+        # This gives the database enough time to start. (At least in our case.)
+        echo "::group::Start service containers"
         if [ "${{ inputs.service-containers }}" != "" ]; then
-          # Start the service containers before building custom container images.
-          # This gives the database enough time to start. (At least in our case.)
-          echo "::group::Start service containers"
           docker-compose up -d ${{ inputs.service-containers }}
-          echo "::endgroup::"
+        else
+          echo "skipped"
         fi
+        echo "::endgroup::"
       shell: bash
     - name: Build container image
       run: |
@@ -55,13 +59,15 @@ runs:
       shell: bash
     - name: Create DB
       run: |
+        # The database containers name must be 'db' and it must be PostgreSQL.
+        echo "::group::Create DB"
         if [ "${{ inputs.db-name }}" != "" ]; then
-          # The database containers name must be 'db' and it must be PostgreSQL.
-          echo "::group::Create DB"
           docker-compose run db psql -h db -U postgres \
               -c "CREATE DATABASE ${{ inputs.db-name }};"
-          echo "::endgroup::"
+        else
+          echo "skipped"
         fi
+        echo "::endgroup::"
       shell: bash
     - name: Start all containers
       run: |
