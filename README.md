@@ -23,6 +23,10 @@ A list of containers to start before building the primary container.
 The name of the database to create in the PostgreSQL container.  The
 container must be named `db`.
 
+### `working-directory`
+
+**Optional** Specifies the working directory where the commands are run.
+
 
 ## Example usage
 
@@ -33,4 +37,5 @@ with:
   docker-hub-access-token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
   service-containers: db redis
   db-name: bar
+  working-directory: ./baz
 ```
