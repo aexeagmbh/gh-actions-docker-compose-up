@@ -8,6 +8,10 @@ inputs:
     description: Service containers to start
   db-name:
     description: Database name
+  apply-migrations:
+    description: Set to true to apply migrations
+    required: false
+    default: false
   working-directory:
     description: The working directory where the commands are run
     required: false
@@ -73,6 +77,17 @@ runs:
         if [ "${{ inputs.db-name }}" != "" ]; then
           docker-compose run db psql -h db -U postgres \
               -c "CREATE DATABASE ${{ inputs.db-name }};"
+        else
+          echo "skipped"
+        fi
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+    - name: Apply migrations
+      run: |
+        echo "::group::Apply migrations"
+        if [ "${{ inputs.apply-migrations }}" == "true" ]; then
+          docker-compose run web migrate
         else
           echo "skipped"
         fi

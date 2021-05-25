@@ -23,6 +23,10 @@ A list of containers to start before building the primary container.
 The name of the database to create in the PostgreSQL container.  The
 container must be named `db`.
 
+### `apply-migrations`
+
+**Optional** Runs `docker-compose run web migrate` if set to `true`
+
 ### `working-directory`
 
 **Optional** Specifies the working directory where the commands are run.
