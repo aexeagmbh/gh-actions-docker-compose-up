@@ -71,6 +71,7 @@ uses: aexeagmbh/gh-actions-docker-compose-up@main
 with:
   aws-access-key-id: AKIAIOSFODNN7EXAMPLE
   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  aws-account-id: 111122223333
   service-containers: db redis
   db-name: bar
   working-directory: ./baz
