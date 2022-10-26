@@ -4,6 +4,18 @@ inputs:
     description: Username for Docker Hub login
   docker-hub-access-token:
     description: Access token for Docker Hub login
+  aws-access-key-id:
+    description: Access key for AWS user with Amazon ECR access
+    default: ''
+  aws-secret-access-key:
+    description: Secret access key for AWS user with Amazon ECR access
+    default: ''
+  aws-region:
+    description: AWS region where Amazon ECR is located
+    default: eu-west-1
+  aws-account-id:
+    description: Id of AWS account where Amazon ECR is located
+    default: ''
   service-containers:
     description: Service containers to start
   db-name:
@@ -48,6 +60,25 @@ runs:
         echo "::endgroup::"
       env:
         DOCKER_HUB_ACCESS_TOKEN: ${{ inputs.docker-hub-access-token }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+    - name: Login to Amazon ECR
+      run: |
+        echo "::group::Login to Amazon ECR"
+        if [ "${{ inputs.aws-access-key-id }}" != "" ]; then
+          echo "[default]" > .aws-credentials
+          echo "aws_access_key_id=${{ inputs.aws-access-key-id }}" >> .aws-credentials
+          echo "aws_secret_access_key=${{ inputs.aws-secret-access-key }}" >> .aws-credentials
+          docker run --rm -it \
+              -v ${PWD}/.aws-credentials:/root/.aws/credentials:ro \
+              amazon/aws-cli:latest ecr get-login-password --region "${{ inputs.aws-region }}" | \
+              docker login --username AWS --password-stdin \
+              "${{ inputs.aws-account-id }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com"
+          rm .aws-credentials
+        else
+          echo "skipped"
+        fi
+        echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
     - name: Start service containers
