@@ -66,30 +66,19 @@ runs:
       run: |
         echo "::group::Login to Amazon ECR"
         if [ "${{ inputs.aws-access-key-id }}" != "" ]; then
-          python -m venv ${HOME}/.venv-docker-login
-          ${HOME}/.venv-docker-login/bin/python -m pip install "boto3>=1.26.97"
-          ${HOME}/.venv-docker-login/bin/python -c "
-            from base64 import b64decode
-            import boto3
-            ecr_client = boto3.client('ecr')
-            auth_token = ecr_client.get_authorization_token(
-              registryIds=['${{ inputs.aws-account-id }}']
-            )
-            assert len(auth_token['authorizationData']) == 1
-            auth_data = auth_token['authorizationData'][0]
-            username, password = b64decode(auth_data['authorizationToken']).decode().split(':')
-            assert username == 'AWS'
-            print(password)" | \
+          echo "[default]" > .aws-credentials
+          echo "aws_access_key_id=${{ inputs.aws-access-key-id }}" >> .aws-credentials
+          echo "aws_secret_access_key=${{ inputs.aws-secret-access-key }}" >> .aws-credentials
+          docker run --rm \
+              -v ${PWD}/.aws-credentials:/root/.aws/credentials:ro \
+              amazon/aws-cli:latest ecr get-login-password --region "${{ inputs.aws-region }}" | \
               docker login --username AWS --password-stdin \
               "${{ inputs.aws-account-id }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com"
+          rm .aws-credentials
         else
           echo "skipped"
         fi
         echo "::endgroup::"
-      env:
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
-        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
     - name: Start service containers
