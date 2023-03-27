@@ -61,18 +61,12 @@ runs:
       working-directory: ${{ inputs.working-directory }}
     - name: Login to Amazon ECR
       if: ${{ inputs.aws-access-key-id != '' }}
-      run: |
-        echo "::group::Login to Amazon ECR"
-        echo "[default]" > .aws-credentials
-        echo "aws_access_key_id=${{ inputs.aws-access-key-id }}" >> .aws-credentials
-        echo "aws_secret_access_key=${{ inputs.aws-secret-access-key }}" >> .aws-credentials
-        docker run --rm \
-            -v ${PWD}/.aws-credentials:/root/.aws/credentials:ro \
-            amazon/aws-cli:latest ecr get-login-password --region "${{ inputs.aws-region }}" | \
-            docker login --username AWS --password-stdin \
-            "${{ inputs.aws-account-id }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com"
-        rm .aws-credentials
-        echo "::endgroup::"
+      run: ${{ github.action_path }}/ecr_login.sh
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+        AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
     - name: Start service containers
