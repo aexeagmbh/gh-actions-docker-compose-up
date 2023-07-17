@@ -34,8 +34,8 @@ runs:
     - name: Install docker-compose
       run: |
         echo "::group::Install docker-compose"
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade docker-compose
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --no-build-isolation --upgrade docker-compose
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
