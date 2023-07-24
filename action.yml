@@ -31,19 +31,11 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install docker-compose
-      run: |
-        echo "::group::Install docker-compose"
-        python -m pip install --upgrade pip setuptools wheel
-        python -m pip install --no-build-isolation --upgrade docker-compose
-        echo "::endgroup::"
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
     - name: Print versions
       run: |
         echo "::group::Print versions"
         docker version
-        docker-compose --version
+        docker compose version
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
@@ -75,14 +67,14 @@ runs:
         # Start the service containers before building custom container images.
         # This gives the database enough time to start. (At least in our case.)
         echo "::group::Start service containers"
-        docker-compose up -d ${{ inputs.service-containers }}
+        docker compose up -d ${{ inputs.service-containers }}
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
     - name: Build container image
       run: |
         echo "::group::Build container image"
-        docker-compose build --pull
+        docker compose build --pull
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
@@ -91,7 +83,7 @@ runs:
       run: |
         # The database containers name must be 'db' and it must be PostgreSQL.
         echo "::group::Create DB"
-        docker-compose run db psql -h db -U postgres \
+        docker compose run db psql -h db -U postgres \
             -c "CREATE DATABASE ${{ inputs.db-name }};"
         echo "::endgroup::"
       shell: bash
@@ -100,15 +92,15 @@ runs:
       if: ${{ inputs.apply-migrations == 'true' }}
       run: |
         echo "::group::Apply migrations"
-        docker-compose run web migrate
+        docker compose run web migrate
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
     - name: Start all containers
       run: |
         echo "::group::Start all containers"
-        docker-compose up -d
-        docker-compose logs
+        docker compose up -d
+        docker compose logs
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}

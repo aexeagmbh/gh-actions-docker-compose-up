@@ -43,7 +43,7 @@ container must be named `db`.
 
 ### `apply-migrations`
 
-**Optional** Runs `docker-compose run web migrate` if set to `true`
+**Optional** Runs `docker compose run web migrate` if set to `true`
 
 ### `working-directory`
 
