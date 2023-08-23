@@ -5,6 +5,10 @@ Start containers specified in a docker-compose file.
 
 ## Inputs
 
+All inputs are optional, but either credentials for the Docker Hub or
+Amazon Elastic Container Registry (Amazon ECR) are recommended to avoid
+issues with rate limits.
+
 ### `docker-hub-username`
 
 The username used for login to Docker Hub.
@@ -47,7 +51,8 @@ container must be named `db`.
 
 ### `working-directory`
 
-**Optional** Specifies the working directory where the commands are run.
+Specifies the working directory where the commands are run.  Uses `./` by
+default.
 
 
 ## Example usage

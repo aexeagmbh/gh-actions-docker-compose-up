@@ -2,8 +2,10 @@
 inputs:
   docker-hub-username:
     description: Username for Docker Hub login
+    default: ''
   docker-hub-access-token:
     description: Access token for Docker Hub login
+    default: ''
   aws-access-key-id:
     description: Access key for AWS user with Amazon ECR access
     default: ''
@@ -18,8 +20,10 @@ inputs:
     default: ''
   service-containers:
     description: Service containers to start
+    default: ''
   db-name:
     description: Database name
+    default: ''
   apply-migrations:
     description: Set to true to apply migrations
     required: false
