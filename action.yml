@@ -12,6 +12,9 @@ inputs:
   aws-secret-access-key:
     description: Secret access key for AWS user with Amazon ECR access
     default: ''
+  aws-session-token:
+    description: Session token for AWS user with Amazon ECR access
+    default: ''
   aws-region:
     description: AWS region where Amazon ECR is located
     default: eu-west-1
@@ -27,7 +30,7 @@ inputs:
   apply-migrations:
     description: Set to true to apply migrations
     required: false
-    default: false
+    default: 'false'
   working-directory:
     description: The working directory where the commands are run
     required: false
@@ -61,6 +64,7 @@ runs:
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        AWS_SESSION_TOKEN: ${{ inputs.aws-session-token }}
         AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
         AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
       shell: bash

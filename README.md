@@ -27,6 +27,11 @@ The access key used for login to Amazon Elastic Container Registry (Amazon ECR).
 The secret access key used for login to Amazon ECR.  This is required if
 `aws-access-key-id` was set.
 
+## `aws-session-token`
+
+The session token used for login to Amazon ECR.  This is required if short-term
+credentials are in use.
+
 ## `aws-region`
 
 The AWS region where the Amazon ECR is located.  Uses `eu-west-1` by default.
