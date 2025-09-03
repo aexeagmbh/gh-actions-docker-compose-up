@@ -1,4 +1,6 @@
 ---
+name: 'gh-actions-docker-compose-up'
+description: 'Build and start Docker Compose services with optional Amazon ECR and Docker Hub login.'
 inputs:
   docker-hub-username:
     description: Username for Docker Hub login
@@ -6,23 +8,20 @@ inputs:
   docker-hub-access-token:
     description: Access token for Docker Hub login
     default: ''
-  aws-access-key-id:
-    description: Access key for AWS user with Amazon ECR access
-    default: ''
-  aws-secret-access-key:
-    description: Secret access key for AWS user with Amazon ECR access
-    default: ''
-  aws-session-token:
-    description: Session token for AWS user with Amazon ECR access
-    default: ''
   aws-region:
-    description: AWS region where Amazon ECR is located
+    description: AWS region where Amazon ECR is located.
     default: eu-west-1
-  aws-account-id:
-    description: Id of AWS account where Amazon ECR is located
+    required: false
+  aws-role-to-assume:
+    description: The Amazon Resource Name (ARN) of the role to assume.
+    default: 'arn:aws:iam::078810848840:role/GitHub-OIDC-ECR-ReadOnly'
+    required: false
+  aws-role-session-name:
+    description: AWS role session name.
     default: ''
-  service-containers:
-    description: Service containers to start
+    required: false
+  service-profiles:
+    description: Docker compose service profiles to start
     default: ''
   db-name:
     description: Database name
@@ -43,9 +42,11 @@ runs:
         echo "::group::Print versions"
         docker version
         docker compose version
+        aws --version
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+
     - name: Login to Docker Hub
       if: ${{ inputs.docker-hub-username != '' }}
       run: |
@@ -58,27 +59,54 @@ runs:
         DOCKER_HUB_ACCESS_TOKEN: ${{ inputs.docker-hub-access-token }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-    - name: Login to Amazon ECR
-      if: ${{ inputs.aws-access-key-id != '' }}
-      run: ${{ github.action_path }}/ecr_login.sh
+
+    - name: Configure AWS Credentials
+      if: ${{ inputs.aws-role-session-name != '' }}
+      uses: aws-actions/configure-aws-credentials@v4.3.1
+      with:
+        role-to-assume: ${{ inputs.aws-role-to-assume }}
+        role-session-name: ${{ inputs.aws-role-session-name }}
+        aws-region: ${{ inputs.aws-region }}
+        role-duration-seconds: 900
+        output-credentials: true
+        output-env-credentials: false
+      id: aws-role-credentials-for-ecr-login
+    - name: AWS Account ID
+      if: ${{ inputs.aws-role-session-name != '' }}
+      run: echo "aws-account-id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
+      shell: bash
       env:
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
-        AWS_SESSION_TOKEN: ${{ inputs.aws-session-token }}
-        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
-        AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
+        AWS_ACCESS_KEY_ID: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-secret-access-key }}
+        AWS_SESSION_TOKEN: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-session-token }}
+        AWS_REGION: ${{ inputs.aws-region }}
+      id: aws-account-id
+    - name: Login to AWS ECR
+      if: ${{ inputs.aws-role-session-name != '' }}
+      run: |
+        aws ecr get-login-password | \
+          docker login --username AWS --password-stdin \
+          "${{ steps.aws-account-id.outputs.aws-account-id }}.dkr.ecr.eu-west-1.amazonaws.com"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-secret-access-key }}
+        AWS_SESSION_TOKEN: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-session-token }}
+        AWS_REGION: ${{ inputs.aws-region }}
+
     - name: Start service containers
-      if: ${{ inputs.service-containers != '' }}
+      if: ${{ inputs.service-profiles != '' }}
       run: |
         # Start the service containers before building custom container images.
         # This gives the database enough time to start. (At least in our case.)
         echo "::group::Start service containers"
-        docker compose up -d ${{ inputs.service-containers }}
+        docker compose up -d
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        COMPOSE_PROFILES: ${{ inputs.service-profiles }}
     - name: Build container image
       run: |
         echo "::group::Build container image"
