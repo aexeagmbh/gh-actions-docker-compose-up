@@ -2,6 +2,9 @@
 
 Build and start Docker Compose services with optional Amazon ECR and Docker Hub login.
 
+If Docker Compose profiles are used, the primary service is expected to be in a
+profile called `main`.
+
 
 ## Inputs
 
@@ -18,38 +21,37 @@ The username used for login to Docker Hub.
 The access token used for login to Docker Hub.  This is required if
 `docker-hub-username` was set.
 
-## `aws-region`
+### `aws-region`
 
 The AWS region where Amazon ECR is located.  Uses `eu-west-1` by default.
 
-## `aws-role-to-assume`
+### `aws-role-to-assume`
 
 The Amazon Resource Name (ARN) of the role to assume.  Uses the role
 `GitHub-OIDC-ECR-ReadOnly` in the `tooling` account by default.
 
-## `aws-role-session-name`
+### `aws-role-session-name`
 
 AWS role session name.  This input is required when Amazon ECR should be used.
 
-## `aws-codeartifact-region`
+### `aws-codeartifact-region`
 
 The AWS region where AWS CodeArtifact is located.  Uses `eu-west-1` by default.
 
-## `aws-codeartifact-role-to-assume`
+### `aws-codeartifact-role-to-assume`
 
 The Amazon Resource Name (ARN) of the role to assume for CodeArtifact.  Uses the role
 `GitHub-OIDC-CodeArtifact-Python-ReadOnly` in the `tooling` account by default.
 
-## `aws-codeartifact-role-session-name`
+### `aws-codeartifact-role-session-name`
 
 AWS role session name for CodeArtifact.  This input is required when AWS CodeArtifact
 should be used.
 
-### `service-profiles`
+### `start-services-early`
 
-The docker compose service profiles to start before building the primary container.
-For more information about service profiles, see
-https://docs.docker.com/compose/how-tos/profiles/
+Set this to `true` to start simple services that might need some time to be ready
+(like PostgreSQL) before building the primary service.
 
 ### `db-name`
 
@@ -75,7 +77,6 @@ uses: aexeagmbh/gh-actions-docker-compose-up@main
 with:
   docker-hub-username: foo
   docker-hub-access-token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-  service-profile: services
   db-name: bar
   working-directory: ./baz
 ```
@@ -86,7 +87,6 @@ with:
 uses: aexeagmbh/gh-actions-docker-compose-up@main
 with:
   aws-role-session-name: <repo-name>-ECR-Pull
-  service-profile: db,redis
   db-name: bar
   working-directory: ./baz
 ```

@@ -32,9 +32,10 @@ inputs:
     description: AWS role session name used for AWS CodeArtifact.
     default: ''
     required: false
-  service-profiles:
-    description: Docker compose service profiles to start
-    default: ''
+  start-services-early:
+    description: Set to true to start simple services (like PostgreSQL) before building the primary service.
+    required: false
+    default: 'false'
   db-name:
     description: Database name
     default: ''
@@ -108,7 +109,7 @@ runs:
         AWS_REGION: ${{ inputs.aws-region }}
 
     - name: Start service containers
-      if: ${{ inputs.service-profiles != '' }}
+      if: ${{ inputs.start-services-early == 'true' }}
       run: |
         # Start the service containers before building custom container images.
         # This gives the database enough time to start. (At least in our case.)
@@ -117,8 +118,6 @@ runs:
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      env:
-        COMPOSE_PROFILES: ${{ inputs.service-profiles }}
 
     - name: Configure AWS Credentials for AWS CodeArtifact
       if: ${{ inputs.aws-codeartifact-role-session-name != '' }}
@@ -146,6 +145,8 @@ runs:
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        COMPOSE_PROFILES: main
 
     - name: Create DB
       if: ${{ inputs.db-name != '' }}
@@ -165,6 +166,7 @@ runs:
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+
     - name: Start all containers
       run: |
         echo "::group::Start all containers"
@@ -173,3 +175,5 @@ runs:
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        COMPOSE_PROFILES: main
