@@ -31,6 +31,20 @@ The Amazon Resource Name (ARN) of the role to assume.  Uses the role
 
 AWS role session name.  This input is required when Amazon ECR should be used.
 
+## `aws-codeartifact-region`
+
+The AWS region where AWS CodeArtifact is located.  Uses `eu-west-1` by default.
+
+## `aws-codeartifact-role-to-assume`
+
+The Amazon Resource Name (ARN) of the role to assume for CodeArtifact.  Uses the role
+`GitHub-OIDC-CodeArtifact-Python-ReadOnly` in the `tooling` account by default.
+
+## `aws-codeartifact-role-session-name`
+
+AWS role session name for CodeArtifact.  This input is required when AWS CodeArtifact
+should be used.
+
 ### `service-profiles`
 
 The docker compose service profiles to start before building the primary container.

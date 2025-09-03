@@ -17,7 +17,19 @@ inputs:
     default: 'arn:aws:iam::078810848840:role/GitHub-OIDC-ECR-ReadOnly'
     required: false
   aws-role-session-name:
-    description: AWS role session name.
+    description: AWS role session name used for Amazon ECR.
+    default: ''
+    required: false
+  aws-codeartifact-region:
+    description: AWS region where AWS CodeArtifact is located.
+    default: eu-west-1
+    required: false
+  aws-codeartifact-role-to-assume:
+    description: The Amazon Resource Name (ARN) of the role to assume.
+    default: 'arn:aws:iam::078810848840:role/GitHub-OIDC-CodeArtifact-Python-ReadOnly'
+    required: false
+  aws-codeartifact-role-session-name:
+    description: AWS role session name used for AWS CodeArtifact.
     default: ''
     required: false
   service-profiles:
@@ -60,7 +72,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
 
-    - name: Configure AWS Credentials
+    - name: Configure AWS Credentials for Amazon ECR
       if: ${{ inputs.aws-role-session-name != '' }}
       uses: aws-actions/configure-aws-credentials@v4.3.1
       with:
@@ -81,7 +93,7 @@ runs:
         AWS_SESSION_TOKEN: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-session-token }}
         AWS_REGION: ${{ inputs.aws-region }}
       id: aws-account-id
-    - name: Login to AWS ECR
+    - name: Login to Amazon ECR
       if: ${{ inputs.aws-role-session-name != '' }}
       run: |
         aws ecr get-login-password | \
@@ -107,13 +119,34 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       env:
         COMPOSE_PROFILES: ${{ inputs.service-profiles }}
+
+    - name: Configure AWS Credentials for AWS CodeArtifact
+      if: ${{ inputs.aws-codeartifact-role-session-name != '' }}
+      uses: aws-actions/configure-aws-credentials@v4.3.1
+      with:
+        role-to-assume: ${{ inputs.aws-codeartifact-role-to-assume }}
+        role-session-name: ${{ inputs.aws-codeartifact-role-session-name }}
+        aws-region: ${{ inputs.aws-codeartifact-region }}
+        role-duration-seconds: 900
+        output-credentials: true
+        output-env-credentials: false
+      id: codeartifact-credentials
     - name: Build container image
       run: |
         echo "::group::Build container image"
-        docker compose build --pull
+        if [ "${{ steps.codeartifact-credentials.outcome }}" == "success" ]; then
+            env \
+              AWS_ACCESS_KEY_ID_CODEARTIFACT="${{ steps.codeartifact-credentials.outputs.aws-access-key-id }}" \
+              AWS_SECRET_ACCESS_KEY_CODEARTIFACT="${{ steps.codeartifact-credentials.outputs.aws-secret-access-key }}" \
+              AWS_SESSION_TOKEN_CODEARTIFACT="${{ steps.codeartifact-credentials.outputs.aws-session-token }}" \
+              docker compose build --pull
+        else
+            docker compose build --pull
+        fi
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+
     - name: Create DB
       if: ${{ inputs.db-name != '' }}
       run: |
