@@ -75,7 +75,7 @@ runs:
 
     - name: Configure AWS Credentials for Amazon ECR
       if: ${{ inputs.aws-role-session-name != '' }}
-      uses: aws-actions/configure-aws-credentials@v5.0.0
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         role-to-assume: ${{ inputs.aws-role-to-assume }}
         role-session-name: ${{ inputs.aws-role-session-name }}
@@ -121,7 +121,7 @@ runs:
 
     - name: Configure AWS Credentials for AWS CodeArtifact
       if: ${{ inputs.aws-codeartifact-role-session-name != '' }}
-      uses: aws-actions/configure-aws-credentials@v5.0.0
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         role-to-assume: ${{ inputs.aws-codeartifact-role-to-assume }}
         role-session-name: ${{ inputs.aws-codeartifact-role-session-name }}
