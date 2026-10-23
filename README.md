@@ -34,6 +34,13 @@ The Amazon Resource Name (ARN) of the role to assume.  Uses the role
 
 AWS role session name.  This input is required when Amazon ECR should be used.
 
+### `aws-ecr-public-login`
+
+Set this to `true` to log in to Amazon ECR Public (`public.ecr.aws`) with the
+same role as Amazon ECR, which then needs `ecr-public:GetAuthorizationToken` and
+`sts:GetServiceBearerToken`.  Requires `aws-role-session-name`.  If that login
+fails, a warning is shown and pulls from Amazon ECR Public stay anonymous.
+
 ### `aws-codeartifact-region`
 
 The AWS region where AWS CodeArtifact is located.  Uses `eu-west-1` by default.

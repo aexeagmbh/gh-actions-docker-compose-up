@@ -20,6 +20,10 @@ inputs:
     description: AWS role session name used for Amazon ECR.
     default: ''
     required: false
+  aws-ecr-public-login:
+    description: Set to true to log in to Amazon ECR Public with the Amazon ECR credentials.
+    required: false
+    default: 'false'
   aws-codeartifact-region:
     description: AWS region where AWS CodeArtifact is located.
     default: eu-west-1
@@ -107,6 +111,23 @@ runs:
         AWS_SECRET_ACCESS_KEY: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-secret-access-key }}
         AWS_SESSION_TOKEN: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-session-token }}
         AWS_REGION: ${{ inputs.aws-region }}
+    - name: Login to Amazon ECR Public
+      if: ${{ inputs.aws-role-session-name != '' && inputs.aws-ecr-public-login == 'true' }}
+      run: |
+        # Authenticated pulls from public.ecr.aws (e.g. awsguru/aws-lambda-adapter)
+        # aren't subject to the anonymous rate limit, which GitHub's runners share.
+        # Amazon ECR Public only issues authorization tokens in us-east-1.
+        if ! aws ecr-public get-login-password --region us-east-1 | \
+            docker login --username AWS --password-stdin public.ecr.aws; then
+          echo "::warning::Login to Amazon ECR Public failed;" \
+            "pulls from public.ecr.aws are anonymous and may be rate limited"
+        fi
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-secret-access-key }}
+        AWS_SESSION_TOKEN: ${{ steps.aws-role-credentials-for-ecr-login.outputs.aws-session-token }}
 
     - name: Start service containers
       if: ${{ inputs.start-services-early == 'true' }}
