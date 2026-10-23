@@ -16,4 +16,14 @@ python ${PATH_TO_SCRIPT}/ecr_password.py | \
     docker login --username AWS --password-stdin \
     "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
 
+# Authenticated pulls from public.ecr.aws (e.g. awsguru/aws-lambda-adapter)
+# aren't subject to the anonymous rate limit, which GitHub's runners share.
+if [[ "${AWS_ECR_PUBLIC_LOGIN}" == "true" ]]; then
+    echo "Logging in to Amazon ECR Public…"
+    if ! python ${PATH_TO_SCRIPT}/ecr_public_password.py | \
+        docker login --username AWS --password-stdin public.ecr.aws; then
+        echo "::warning::Login to Amazon ECR Public failed; pulls from public.ecr.aws are anonymous and may be rate limited"
+    fi
+fi
+
 echo "::endgroup::"

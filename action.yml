@@ -21,6 +21,10 @@ inputs:
   aws-account-id:
     description: Id of AWS account where Amazon ECR is located
     default: ''
+  aws-ecr-public-login:
+    description: Set to true to log in to Amazon ECR Public with the Amazon ECR credentials
+    required: false
+    default: 'false'
   service-containers:
     description: Service containers to start
     default: ''
@@ -67,6 +71,7 @@ runs:
         AWS_SESSION_TOKEN: ${{ inputs.aws-session-token }}
         AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
         AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
+        AWS_ECR_PUBLIC_LOGIN: ${{ inputs.aws-ecr-public-login }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
     - name: Start service containers

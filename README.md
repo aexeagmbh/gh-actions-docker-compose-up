@@ -41,6 +41,13 @@ The AWS region where the Amazon ECR is located.  Uses `eu-west-1` by default.
 The id of the AWS account where the Amazon ECR is located.  Usually the
 tooling account's id.  This is required if `aws-access-key-id` was set.
 
+## `aws-ecr-public-login`
+
+Set this to `true` to log in to Amazon ECR Public (`public.ecr.aws`) with the
+same credentials as Amazon ECR, which then need `ecr-public:GetAuthorizationToken`
+and `sts:GetServiceBearerToken`.  Requires `aws-access-key-id`.  If that login
+fails, a warning is shown and pulls from Amazon ECR Public stay anonymous.
+
 ### `service-containers`
 
 A list of containers to start before building the primary container.
